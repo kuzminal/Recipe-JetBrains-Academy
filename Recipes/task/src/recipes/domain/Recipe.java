@@ -6,7 +6,9 @@ import org.hibernate.Hibernate;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+import java.util.List;
 import java.util.Objects;
 
 @Getter
@@ -25,10 +27,14 @@ public class Recipe {
     private String name;
     @NotBlank(message = "Description cannot be blank")
     private String description;
-    @NotEmpty(message = "Ingredients cannot be empty")
-    private String[] ingredients;
-    @NotEmpty(message = "Directions cannot be empty")
-    private String[] directions;
+    @NotNull(message = "Ingredients shouldn't be null")
+    @Size(min = 1, message = "Minimal size should be 1")
+    @ElementCollection
+    private List<String> ingredients;
+    @NotNull(message = "Directions shouldn't be null")
+    @Size(min = 1, message = "Minimal size should be 1")
+    @ElementCollection
+    private List<String> directions;
 
     @Override
     public boolean equals(Object o) {
