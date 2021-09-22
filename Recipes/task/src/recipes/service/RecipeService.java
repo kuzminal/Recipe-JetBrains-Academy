@@ -4,6 +4,8 @@ import org.springframework.stereotype.Service;
 import recipes.domain.Recipe;
 import recipes.repository.RecipeRepository;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -22,11 +24,30 @@ public class RecipeService {
         return recipeRepository.findById(id);
     }
 
-    public Recipe deleteById(Long id) {
+    public boolean deleteById(Long id) {
         Optional<Recipe> recipe = recipeRepository.findById(id);
         if (recipe.isPresent()) {
             recipeRepository.deleteById(id);
-            return recipe.get();
-        } else return null;
+            return true;
+        } else return false;
+    }
+
+    public boolean updateRecipe(Recipe recipe, Long id) {
+        if (getRecipeById(id).isPresent()) {
+            recipe.setId(id);
+            recipe.setDate(LocalDateTime.now());
+            recipeRepository.save(recipe);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public List<Recipe> findByCategory(String category) {
+        return recipeRepository.findAllByCategoryIgnoreCaseOrderByDateDesc(category);
+    }
+
+    public List<Recipe> findByName(String name) {
+        return recipeRepository.findAllByNameIsContainingIgnoreCaseOrderByDateDesc(name);
     }
 }

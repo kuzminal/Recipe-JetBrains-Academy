@@ -2,12 +2,11 @@ package recipes.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
-import org.hibernate.Hibernate;
+import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import javax.validation.constraints.*;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -25,6 +24,10 @@ public class Recipe {
     private Long id;
     @NotBlank(message = "Name cannot be blank")
     private String name;
+    @NotBlank(message = "Category cannot be blank")
+    private String category;
+    @CreationTimestamp
+    private LocalDateTime date;
     @NotBlank(message = "Description cannot be blank")
     private String description;
     @NotNull(message = "Ingredients shouldn't be null")
@@ -36,16 +39,17 @@ public class Recipe {
     @ElementCollection
     private List<String> directions;
 
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        if (o == null || getClass() != o.getClass()) return false;
         Recipe recipe = (Recipe) o;
-        return Objects.equals(id, recipe.id);
+        return Objects.equals(id, recipe.id) && Objects.equals(name, recipe.name) && Objects.equals(description, recipe.description) && Objects.equals(ingredients, recipe.ingredients) && Objects.equals(directions, recipe.directions) && Objects.equals(category, recipe.category);
     }
 
     @Override
     public int hashCode() {
-        return 0;
+        return Objects.hash(id, name, description, ingredients, directions, category);
     }
 }

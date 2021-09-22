@@ -11,8 +11,6 @@ import recipes.service.RecipeService;
 import javax.validation.Valid;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 
@@ -33,19 +31,36 @@ public class RecipeController {
         });
     }
 
+    @GetMapping("/search")
+    public List<Recipe> search(@RequestParam Optional<String> category,
+                               @RequestParam Optional<String> name) {
+        if ((category.isPresent() && name.isPresent()) ||
+                (!category.isPresent() && !name.isPresent())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        } else if (category.isPresent()) {
+            return recipeService.findByCategory(category.get());
+       } else {
+            return recipeService.findByName(name.get());
+        }
+    }
+
     @PostMapping("/new")
     public ResponseEntity<?> saveRecipe(@RequestBody @Valid Recipe recipe) throws IOException {
-        try (FileWriter fw = new FileWriter(new File("tmp.txt"))) {
-            fw.write(recipe.toString());
-        }
         Recipe recipe1 = recipeService.saveRecipe(recipe);
         return new ResponseEntity<>(Map.of("id", recipe1.getId()), HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteRecipeById(@PathVariable @Max(Long.MAX_VALUE) @Min(0) Long id) {
-        if (recipeService.deleteById(id) != null) {
+        if (recipeService.deleteById(id)) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } else throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateRecipe(@PathVariable Long id, @RequestBody @Valid Recipe recipe) {
+        if (recipeService.updateRecipe(recipe, id)) {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }else throw new ResponseStatusException(HttpStatus.NOT_FOUND);
     }
 }
