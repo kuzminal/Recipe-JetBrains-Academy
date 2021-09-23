@@ -38,6 +38,11 @@ public class Recipe {
     @Size(min = 1, message = "Minimal size should be 1")
     @ElementCollection
     private List<String> directions;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "author_id")
+    @JsonIgnore
+    @ToString.Exclude
+    private User author;
 
 
     @Override

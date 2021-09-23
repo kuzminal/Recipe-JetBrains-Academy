@@ -8,10 +8,10 @@ import org.springframework.web.server.ResponseStatusException;
 import recipes.domain.Recipe;
 import recipes.service.RecipeService;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
-import java.io.IOException;
 import java.util.*;
 
 @RestController
@@ -35,32 +35,43 @@ public class RecipeController {
     public List<Recipe> search(@RequestParam Optional<String> category,
                                @RequestParam Optional<String> name) {
         if ((category.isPresent() && name.isPresent()) ||
-                (!category.isPresent() && !name.isPresent())) {
+                (category.isEmpty() && name.isEmpty())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         } else if (category.isPresent()) {
             return recipeService.findByCategory(category.get());
-       } else {
+        } else {
             return recipeService.findByName(name.get());
         }
     }
 
     @PostMapping("/new")
-    public ResponseEntity<?> saveRecipe(@RequestBody @Valid Recipe recipe) throws IOException {
-        Recipe recipe1 = recipeService.saveRecipe(recipe);
+    public ResponseEntity<?> saveRecipe(@RequestBody @Valid Recipe recipe, HttpServletRequest request) {
+        Recipe recipe1 = recipeService.saveRecipe(recipe, request.getUserPrincipal().getName());
         return new ResponseEntity<>(Map.of("id", recipe1.getId()), HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteRecipeById(@PathVariable @Max(Long.MAX_VALUE) @Min(0) Long id) {
-        if (recipeService.deleteById(id)) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } else throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+    public ResponseEntity<?> deleteRecipeById(@PathVariable @Max(Long.MAX_VALUE) @Min(0) Long id, HttpServletRequest request) {
+        try {
+            if (!recipeService.deleteById(id, request.getUserPrincipal().getName())) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            }
+        } catch (UnsupportedOperationException e) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateRecipe(@PathVariable Long id, @RequestBody @Valid Recipe recipe) {
-        if (recipeService.updateRecipe(recipe, id)) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }else throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+    public ResponseEntity<?> updateRecipe(@PathVariable Long id, @RequestBody @Valid Recipe
+            recipe, HttpServletRequest request) {
+        try {
+            if (!recipeService.updateRecipe(recipe, id, request.getUserPrincipal().getName())) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            }
+        } catch (UnsupportedOperationException e) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }
